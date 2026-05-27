@@ -645,6 +645,117 @@ function updateProgress() {
   document.getElementById('progressLabel').textContent = done+' de 4';
 }
 
+// ⚠️ REEMPLAZA ESTA URL CON LA QUE TE DÉ GOOGLE APPS SCRIPT
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwtsZwcMJ5DUUd627HCrTtPvwt8dR5_mSSE84sTG8i_Xxa3tNGnjepzkKYIks5OJOPp/exec";
+
+function recopilarDatos() {
+  const data = {
+    fecha: document.getElementById('fecha').value,
+    supervisor: document.getElementById('supervisor').value.trim(),
+    recinto: document.getElementById('recinto').value,
+    horaInicio: '',
+    horaTermino: '',
+    obsGenerales: '',
+    workers: []
+  };
+
+  // Hora inicio / término y observaciones generales
+  const allTexts = document.querySelectorAll('input[type=text]');
+  allTexts.forEach(inp => {
+    const ph = inp.placeholder || '';
+    if (ph.includes('08:00')) data.horaInicio = inp.value;
+    if (ph.includes('17:00')) data.horaTermino = inp.value;
+  });
+  const obsGeneral = document.querySelector('textarea[placeholder*="Incidentes"]');
+  if (obsGeneral) data.obsGenerales = obsGeneral.value;
+
+  const catNames = ["Pavimentos","Caminos perimetrales e interiores","Drenajes","Vegetación","Cercos","Franja de seguridad","Edificio terminal / Refugios","Pasadas peatonales","Ayudas visuales","Catavientos","Puntos de Posada de Helicópteros (PPH)"];
+  const obsKeys  = ["obsPavimentos","obsCaminos","obsDrenajes","obsVegetacion","obsCercos","obsFramja","obsEdificio","obsPeatonales","obsAyudas","obsCatavientos","obsPPH"];
+
+  for (let i = 0; i < 4; i++) {
+    const wBody = document.getElementById('wbody' + i);
+    const worker = {
+      nombre: (document.getElementById('wname' + i) || {}).value || '',
+      rut: '',
+      asistencia: '',
+      horasLaborales: '',
+      horasEfectivas: '',
+      trabajos: [],
+      tiempos: [],
+      cantidades: [],
+      motivoAusencia: '',
+      obsAusencia: ''
+    };
+
+    if (wBody) {
+      // RUT
+      const inputs = wBody.querySelectorAll('input[type=text]');
+      inputs.forEach(inp => { if ((inp.placeholder||'').includes('12.345')) worker.rut = inp.value; });
+
+      // Asistencia
+      const badge = document.getElementById('wbadge' + i);
+      if (badge) worker.asistencia = badge.textContent.trim();
+
+      // Horas
+      const numInputs = wBody.querySelectorAll('input[type=number]');
+      if (numInputs[0]) worker.horasLaborales = numInputs[0].value;
+      if (numInputs[1]) worker.horasEfectivas = numInputs[1].value;
+
+      // Trabajos realizados (checkboxes marcados)
+      const checks = wBody.querySelectorAll('input[type=checkbox]:checked');
+      checks.forEach(cb => {
+        const label = cb.closest('.work-item-header')?.querySelector('span')?.textContent || '';
+        worker.trabajos.push(label);
+        // tiempo y cantidad del detalle
+        const detail = cb.closest('.work-item')?.querySelector('.work-detail');
+        if (detail) {
+          const dInputs = detail.querySelectorAll('input[type=number], input[type=text]');
+          worker.tiempos.push(dInputs[0] ? dInputs[0].value : '');
+          worker.cantidades.push(dInputs[1] ? dInputs[1].value : '');
+        }
+      });
+
+      // Observaciones por categoría
+      const textareas = wBody.querySelectorAll('textarea');
+      let taIdx = 0;
+      catNames.forEach((cat, ci) => {
+        // Busca el textarea que sigue al título de la categoría
+        const titles = wBody.querySelectorAll('.work-section-title');
+        titles.forEach(t => {
+          if (t.textContent.trim() === cat) {
+            // El textarea de observaciones está después del bloque de ítems
+            const nextField = t.nextElementSibling;
+            let ta = null;
+            if (nextField) {
+              // buscar hacia adelante hasta encontrar un textarea
+              let el = nextField;
+              while (el) {
+                ta = el.querySelector && el.querySelector('textarea');
+                if (ta) break;
+                el = el.nextElementSibling;
+                if (el && el.classList && el.classList.contains('work-section-title')) break;
+              }
+            }
+            worker[obsKeys[ci]] = ta ? ta.value : '';
+          }
+        });
+      });
+
+      // Motivo ausencia
+      const motivoSel = wBody.querySelector('select');
+      if (motivoSel) worker.motivoAusencia = motivoSel.value;
+      const obsTas = wBody.querySelectorAll('textarea');
+      if (worker.asistencia === 'Ausente' && obsTas.length > 0) {
+        worker.obsAusencia = obsTas[obsTas.length - 1].value;
+      }
+    }
+
+    data.workers.push(worker);
+  }
+
+  return data;
+}
+
 function submitForm() {
   const sup = document.getElementById('supervisor').value.trim();
   const rec = document.getElementById('recinto').value;
@@ -656,9 +767,43 @@ function submitForm() {
   if (done < 4) {
     if (!confirm(`Solo ${done} de 4 jornales tienen asistencia registrada. ¿Desea enviar igual?`)) return;
   }
-  const msg = document.getElementById('successMsg');
-  msg.textContent = `Jornada del ${fec} en ${rec} registrada. Supervisor: ${sup}.`;
-  document.getElementById('overlay').classList.add('show');
+
+  // Mostrar estado de envío
+  const btnSubmit = document.querySelector('.btn-submit');
+  btnSubmit.textContent = 'Enviando...';
+  btnSubmit.disabled = true;
+
+  const data = recopilarDatos();
+
+  if (SCRIPT_URL === "PEGA_TU_URL_AQUI") {
+    // Modo demo: mostrar éxito sin enviar (hasta que configures el script)
+    const msg = document.getElementById('successMsg');
+    msg.textContent = `Jornada del ${fec} en ${rec} registrada. Supervisor: ${sup}.`;
+    document.getElementById('overlay').classList.add('show');
+    btnSubmit.textContent = 'Enviar reporte';
+    btnSubmit.disabled = false;
+    return;
+  }
+
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(() => {
+    const msg = document.getElementById('successMsg');
+    msg.textContent = `Jornada del ${fec} en ${rec} registrada. Supervisor: ${sup}.`;
+    document.getElementById('overlay').classList.add('show');
+  })
+  .catch(err => {
+    alert('Error al enviar. Verifica tu conexión e intenta nuevamente.');
+    console.error(err);
+  })
+  .finally(() => {
+    btnSubmit.textContent = 'Enviar reporte';
+    btnSubmit.disabled = false;
+  });
 }
 
 function newForm() {
