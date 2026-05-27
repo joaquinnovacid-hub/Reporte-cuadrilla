@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte Diario Cuadrilla</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f3f2f1;
+  color: #201f1e;
+  font-size: 15px;
+}
+
+.wrap { max-width: 680px; margin: 0 auto; padding: 0 0 60px; }
+
+/* HEADER */
+.form-header {
+  background: #fff;
+  border-top: 6px solid #0078d4;
+  padding: 24px 24px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.logo { width: 80px; height: 40px; background: #0078d4; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 700; margin-bottom: 14px; text-align:center; padding:4px; }
+.form-header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.form-header p { font-size: 13px; color: #605e5c; line-height: 1.5; }
+.req-note { font-size: 12px; color: #c50f1f; margin-top: 10px; }
+
+/* CARDS */
+.card {
+  background: #fff;
+  border-radius: 4px;
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.card label.qlabel {
+  display: block; font-size: 14px; font-weight: 600;
+  margin-bottom: 10px; color: #201f1e;
+}
+.card label.qlabel .r { color: #c50f1f; }
+
+input[type=text], input[type=date], input[type=number], textarea, select {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid #8a8886; border-radius: 2px;
+  font-size: 14px; font-family: inherit; color: #201f1e;
+  background: #fff; outline: none;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #0078d4; border-width: 2px;
+}
+textarea { resize: vertical; }
+
+/* WORKER CARD */
+.worker-card {
+  background: #fff;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.worker-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.worker-header:hover { background: #f0f6ff; }
+
+.worker-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; flex-shrink: 0;
+}
+.av1 { background: #ddeeff; color: #0050a4; }
+.av2 { background: #ddf3e4; color: #1a6b3a; }
+.av3 { background: #fef3cd; color: #7a5000; }
+.av4 { background: #fde8e8; color: #a02020; }
+
+.worker-info { flex: 1; }
+.worker-info .wnum { font-size: 12px; color: #605e5c; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.worker-info .wname { font-size: 15px; font-weight: 600; color: #201f1e; margin-top: 1px; }
+
+.worker-status {
+  display: flex; align-items: center; gap: 8px;
+}
+.badge {
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 12px; white-space: nowrap;
+}
+.badge-present { background: #ddf3e4; color: #1a6b3a; }
+.badge-absent  { background: #fde8e8; color: #a02020; }
+.badge-empty   { background: #f0f0f0; color: #888; }
+
+.chevron {
+  font-size: 18px; color: #605e5c;
+  transition: transform 0.2s;
+  line-height: 1;
+}
+.chevron.open { transform: rotate(180deg); }
+
+.worker-body {
+  padding: 0 18px 18px;
+  border-top: 1px solid #edebe9;
+  display: none;
+}
+.worker-body.open { display: block; }
+
+/* Presence toggle */
+.presence-toggle {
+  display: flex; gap: 8px; margin-bottom: 16px; margin-top: 14px;
+}
+.pres-btn {
+  flex: 1; padding: 9px 0; border-radius: 4px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid #d0d0d0; background: #fff;
+  color: #605e5c; transition: all 0.15s; font-family: inherit;
+}
+.pres-btn.active-present {
+  background: #ddf3e4; color: #1a6b3a;
+  border-color: #1a6b3a;
+}
+.pres-btn.active-absent {
+  background: #fde8e8; color: #a02020;
+  border-color: #a02020;
+}
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+@media (max-width: 420px) { .field-row { grid-template-columns: 1fr; } }
+
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12px; font-weight: 600;
+  color: #605e5c; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+/* Work items */
+.work-section-title {
+  font-size: 12px; font-weight: 700; color: #0078d4;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin: 16px 0 8px; padding-bottom: 6px;
+  border-bottom: 1.5px solid #e0eeff;
+}
+
+.work-item {
+  border: 1px solid #e0e0e0; border-radius: 4px;
+  margin-bottom: 6px; overflow: hidden;
+}
+
+.work-item-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; cursor: pointer;
+  transition: background 0.1s;
+}
+.work-item-header:hover { background: #f8f8f8; }
+
+.work-item-header input[type=checkbox] {
+  width: 18px; height: 18px; flex-shrink: 0;
+  accent-color: #0078d4; cursor: pointer;
+}
+.work-item-header span { font-size: 13px; color: #201f1e; line-height: 1.3; }
+
+.work-detail {
+  display: none;
+  padding: 10px 12px 12px 40px;
+  background: #f0f7ff;
+  border-top: 1px solid #d0e8ff;
+  animation: fadeIn 0.15s ease;
+}
+.work-detail.show { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 420px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.detail-grid label { display: block; font-size: 11px; font-weight: 700;
+  color: #0078d4; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+.obs-field { margin-top: 12px; }
+.obs-field label { font-size: 12px; font-weight: 700; color: #605e5c;
+  display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+/* Progress */
+.progress-bar-wrap {
+  background: #edebe9; border-radius: 4px; height: 6px;
+  margin: 12px 0 4px; overflow: hidden;
+}
+.progress-bar { height: 100%; background: #0078d4; border-radius: 4px; transition: width 0.3s; }
+.progress-label { font-size: 12px; color: #605e5c; text-align: right; }
+
+/* Submit */
+.submit-section {
+  background: #fff; padding: 20px; border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 12px;
+}
+.btn-submit {
+  background: #0078d4; color: #fff; border: none;
+  padding: 11px 32px; font-size: 15px; font-weight: 600;
+  border-radius: 2px; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-submit:hover { background: #106ebe; }
+.btn-clear {
+  background: transparent; color: #0078d4;
+  border: 1px solid #0078d4; padding: 11px 20px;
+  font-size: 15px; border-radius: 2px; cursor: pointer;
+  font-family: inherit; margin-left: 10px;
+}
+
+.hint { font-size: 11px; color: #a19f9d; margin-top: 3px; }
+
+/* Success */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.overlay.show { display: flex; }
+.success-box {
+  background: #fff; border-radius: 8px; padding: 32px 28px;
+  max-width: 320px; text-align: center;
+}
+.success-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #ddf3e4; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 14px; font-size: 26px; color: #1a6b3a;
+}
+.success-box h2 { font-size: 18px; margin-bottom: 8px; }
+.success-box p  { font-size: 13px; color: #605e5c; margin-bottom: 18px; }
+.btn-new { background: #0078d4; color: #fff; border: none;
+  padding: 10px 24px; border-radius: 2px; font-size: 14px;
+  cursor: pointer; font-family: inherit; }
+
+.section-banner {
+  background: #0078d4; color: #fff;
+  padding: 9px 16px; font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 10px; border-radius: 4px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="form-header">
+  <div class="logo">CAD<br>CENTRO SUR</div>
+  <h1>Reporte Diario de Cuadrilla</h1>
+  <p>El supervisor completa este formulario al cierre de jornada.<br>
+  Incluye asistencia, tareas ejecutadas, tiempo y cantidades de los 4 jornales.</p>
+  <div class="req-note">* Campos obligatorios</div>
+</div>
+
+<!-- DATOS GENERALES -->
+<div class="card">
+  <label class="qlabel">Nombre del supervisor <span class="r">*</span></label>
+  <input type="text" id="supervisor" placeholder="Nombre completo">
+</div>
+
+<div class="card">
+  <div class="field-row">
+    <div class="field">
+      <label class="qlabel">Fecha <span class="r">*</span></label>
+      <input type="date" id="fecha">
+    </div>
+    <div class="field">
+      <label class="qlabel">Recinto / Aeródromo <span class="r">*</span></label>
+      <select id="recinto">
+        <option value="">Seleccione...</option>
+        <optgroup label="Aeródromos">
+          <option>El Boldo de Cauquenes</option>
+          <option>General Freire de Curicó</option>
+          <option>Municipal de Linares</option>
+          <option>Bernardo O'Higgins de Chillán</option>
+          <option>Las Misiones de Cañete</option>
+          <option>Carriel Sur de Talcahuano</option>
+          <option>Isla Mocha</option>
+          <option>Puerto Sur de Isla Santa María</option>
+          <option>Los Pehuenches de Lebu</option>
+          <option>María Dolores de Los Ángeles</option>
+          <option>Lequecahue de Tirúa</option>
+          <option>Los Confines de Angol</option>
+          <option>Villa Portales de Lonquimay</option>
+          <option>Pucón</option>
+          <option>Traiguén</option>
+          <option>Victoria</option>
+          <option>La Araucanía</option>
+        </optgroup>
+        <optgroup label="Puntos de Posada">
+          <option>Panguilemo de Talca</option>
+          <option>Cuna de Prat de Ninhue</option>
+          <option>Los Álamos</option>
+          <option>Base Naval de Talcahuano</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label class="qlabel">Hora inicio jornada</label>
+      <input type="text" placeholder="ej. 08:00">
+    </div>
+    <div class="field">
+      <label class="qlabel">Hora término jornada</label>
+      <input type="text" placeholder="ej. 17:00">
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESO -->
+<div class="card" style="padding:14px 20px">
+  <div style="font-size:13px; font-weight:600; color:#605e5c; margin-bottom:4px">Jornales completados</div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+  <div class="progress-label" id="progressLabel">0 de 4</div>
+</div>
+
+<!-- JORNALES -->
+<div class="section-banner">Registro por jornal</div>
+
+<div id="workers-container"></div>
+
+<!-- OBSERVACIONES GENERALES -->
+<div class="card">
+  <label class="qlabel">Observaciones generales de la jornada</label>
+  <textarea rows="4" placeholder="Incidentes, condiciones climáticas, problemas de equipos, ausencias justificadas, etc."></textarea>
+</div>
+
+<!-- SUBMIT -->
+<div class="submit-section">
+  <button class="btn-submit" onclick="submitForm()">Enviar reporte</button>
+  <button class="btn-clear" onclick="clearForm()">Limpiar</button>
+</div>
+
+<div style="text-align:center; font-size:11px; color:#a19f9d; padding:12px">
+  Reporte diario cuadrilla · CAD Macrozona Centro Sur 2026
+</div>
+
+</div>
+
+<!-- SUCCESS -->
+<div class="overlay" id="overlay">
+  <div class="success-box">
+    <div class="success-icon">✓</div>
+    <h2>Reporte enviado</h2>
+    <p id="successMsg">Jornada registrada correctamente.</p>
+    <button class="btn-new" onclick="newForm()">Nuevo reporte</button>
+  </div>
+</div>
+
+<script>
+const TRABAJOS = [
+  { cat: "Pavimentos", items: [
+    "Bacheo con mezcla asfáltica en frío",
+    "Bacheo con mezcla asfáltica en caliente",
+    "Conservación adoquines / adocretos",
+    "Aplicación tratamiento superficial (slurry / fog seal / sello asfáltico)",
+    "Limpieza y sellado de juntas — pavimento asfáltico",
+    "Limpieza y sellado de juntas — pavimento hormigón",
+    "Remoción de caucho",
+    "Conservación / nivelación pavimento granular"
+  ]},
+  { cat: "Caminos perimetrales e interiores", items: [
+    "Conservación caminos perimetrales",
+    "Conservación caminos interiores",
+    "Conservación de señalética",
+    "Conservación de demarcación",
+    "Conservación elementos de seguridad (barreras / new jersey)"
+  ]},
+  { cat: "Drenajes", items: [
+    "Limpieza de canales",
+    "Limpieza de cámaras, fosos y/o sumideros",
+    "Conservación de obras de arte",
+    "Conservación de rejillas",
+    "Reposición / limpieza de tubos"
+  ]},
+  { cat: "Vegetación", items: [
+    "Corte de pasto",
+    "Roce superficial de terreno",
+    "Despeje y descuaje de terreno",
+    "Aplicación matamaleza"
+  ]},
+  { cat: "Cercos", items: [
+    "Conservación cercos metálicos",
+    "Conservación cercos ganaderos",
+    "Conservación portón de acceso",
+    "Conservación postación metálico",
+    "Conservación postación ganadero",
+    "Conservación de fundación",
+    "Instalación de protecciones (cerco bajo / crucetas)",
+    "Suministro e instalación de concertinas"
+  ]},
+  { cat: "Franja de seguridad", items: [
+    "Corte T.C.N del terreno",
+    "Escarpe superficial del terreno",
+    "Relleno / colocación de material granular",
+    "Estabilizador de suelos",
+    "Compactado material granular",
+    "Suministro y colocación de geotextil",
+    "Aplicación matamaleza"
+  ]},
+  { cat: "Edificio terminal / Refugios", items: [
+    "Conservación de cubierta",
+    "Conservación luces de emergencia",
+    "Conservación de puertas",
+    "Conservación de tabiques",
+    "Conservación de baños",
+    "Conservación de pintura",
+    "Reparación / limpieza de canaletas",
+    "Reparación / reemplazo de tuberías",
+    "Colocación señalización y letreros",
+    "Colocación barandas / pasamanos",
+    "Conservación de ventanas",
+    "Suministro y colocación de antideslizantes",
+    "Suministro y colocación de luces",
+    "Conservación estructura metálica",
+    "Suministro y colocación de alfombras y pisos",
+    "Suministro y colocación de planchas",
+    "Suministro y colocación de enchufes / interruptores"
+  ]},
+  { cat: "Pasadas peatonales", items: [
+    "Conservación elementos de accesibilidad (barandas / escaleras)",
+    "Conservación señalética",
+    "Conservación demarcación",
+    "Conservación iluminación"
+  ]},
+  { cat: "Ayudas visuales", items: [
+    "Conservación fundaciones luces",
+    "Conservación señalética",
+    "Conservación cámaras y letreros",
+    "Conservación demarcación",
+    "Conservación luces y accesorios"
+  ]},
+  { cat: "Catavientos", items: [
+    "Suministro y colocación de mangas",
+    "Conservación anillo de hormigón",
+    "Conservación infraestructura cataviento",
+    "Conservación demarcación indicador de viento"
+  ]},
+  { cat: "Puntos de Posada de Helicópteros (PPH)", items: [
+    "Bacheo asfáltico en frío — PPH",
+    "Bacheo asfáltico en caliente — PPH",
+    "Conservación adoquines — PPH",
+    "Tratamiento superficial — PPH",
+    "Sellado juntas asfálticas — PPH",
+    "Sellado juntas hormigón — PPH",
+    "Remoción de caucho — PPH",
+    "Nivelación pavimento granular — PPH",
+    "Conservación demarcación — PPH",
+    "Conservación luces y accesorios — PPH",
+    "Suministro mangas — PPH",
+    "Conservación anillo hormigón — PPH",
+    "Cataviento — PPH",
+    "Corte pasto — PPH",
+    "Roce superficial — PPH",
+    "Despeje y descuaje — PPH",
+    "Aplicación matamaleza — PPH"
+  ]}
+];
+
+const WORKER_COLORS = ['av1','av2','av3','av4'];
+const WORKER_INITIALS = ['J1','J2','J3','J4'];
+const completedStatus = [false, false, false, false];
+
+function buildWorkItems(wIdx) {
+  let html = '';
+  TRABAJOS.forEach((cat, ci) => {
+    html += `<div class="work-section-title">${cat.cat}</div>`;
+    cat.items.forEach((item, ii) => {
+      const id = `w${wIdx}_c${ci}_i${ii}`;
+      const detailId = `d${wIdx}_c${ci}_i${ii}`;
+      html += `
+        <div class="work-item">
+          <div class="work-item-header" onclick="toggleWork('${id}','${detailId}')">
+            <input type="checkbox" id="${id}" onclick="event.stopPropagation(); toggleWork('${id}','${detailId}')">
+            <span>${item}</span>
+          </div>
+          <div class="work-detail" id="${detailId}">
+            <div class="detail-grid">
+              <div>
+                <label>Tiempo empleado (horas)</label>
+                <input type="number" min="0" step="0.5" placeholder="ej. 3.5">
+              </div>
+              <div>
+                <label>Cantidad ejecutada</label>
+                <input type="text" placeholder="ej. 25 m²">
+              </div>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += `<div class="field" style="margin-top:6px">
+      <label class="obs-field"><label>Observaciones — ${cat.cat}</label></label>
+      <textarea rows="2" placeholder="Detalles adicionales..."></textarea>
+    </div>`;
+  });
+  return html;
+}
+
+function buildWorkers() {
+  const container = document.getElementById('workers-container');
+  let html = '';
+  for (let i = 0; i < 4; i++) {
+    html += `
+    <div class="worker-card" id="wcard${i}">
+      <div class="worker-header" onclick="toggleWorker(${i})">
+        <div class="worker-avatar ${WORKER_COLORS[i]}" id="wav${i}">${WORKER_INITIALS[i]}</div>
+        <div class="worker-info">
+          <div class="wnum">Jornal ${i+1}</div>
+          <div class="wname" id="wname_display${i}">Sin nombre</div>
+        </div>
+        <div class="worker-status">
+          <span class="badge badge-empty" id="wbadge${i}">Sin registrar</span>
+        </div>
+        <div class="chevron" id="wchev${i}">&#8964;</div>
+      </div>
+      <div class="worker-body" id="wbody${i}">
+
+        <div class="field-row" style="margin-top:14px">
+          <div class="field">
+            <label>Nombre del jornal <span style="color:#c50f1f">*</span></label>
+            <input type="text" id="wname${i}" placeholder="Nombre completo"
+              oninput="updateName(${i},this.value)">
+          </div>
+          <div class="field">
+            <label>RUT (opcional)</label>
+            <input type="text" placeholder="12.345.678-9">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:12px;font-weight:700;color:#605e5c;text-transform:uppercase;letter-spacing:0.3px;display:block;margin-bottom:6px">Asistencia <span style="color:#c50f1f">*</span></label>
+          <div class="presence-toggle">
+            <button class="pres-btn" id="pbtn_present${i}" onclick="setPresence(${i},'present')">Presente</button>
+            <button class="pres-btn" id="pbtn_absent${i}"  onclick="setPresence(${i},'absent')">Ausente</button>
+          </div>
+        </div>
+
+        <div id="work_section${i}" style="display:none">
+          <div class="work-section-title" style="margin-top:6px">Motivo de ausencia</div>
+          <div id="absent_reason${i}" style="display:none">
+            <div class="field">
+              <label>Motivo</label>
+              <select>
+                <option value="">Seleccione...</option>
+                <option>Enfermedad (con justificativo)</option>
+                <option>Enfermedad (sin justificativo)</option>
+                <option>Falta injustificada</option>
+                <option>Permiso autorizado</option>
+                <option>Accidente laboral</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Observaciones</label>
+              <textarea rows="2" placeholder="Detalles..."></textarea>
+            </div>
+          </div>
+
+          <div id="present_section${i}" style="display:none">
+            <div class="field-row" style="margin-top:4px">
+              <div class="field">
+                <label>Horas laborales</label>
+                <input type="number" min="0" max="24" step="0.5" placeholder="ej. 9">
+              </div>
+              <div class="field">
+                <label>Horas efectivas</label>
+                <input type="number" min="0" max="24" step="0.5" placeholder="ej. 8">
+              </div>
+            </div>
+            ${buildWorkItems(i)}
+          </div>
+        </div>
+
+      </div>
+    </div>`;
+  }
+  container.innerHTML = html;
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fecha').value = today;
+}
+
+function toggleWorker(i) {
+  const body = document.getElementById('wbody'+i);
+  const chev = document.getElementById('wchev'+i);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+}
+
+function updateName(i, val) {
+  const display = document.getElementById('wname_display'+i);
+  const av = document.getElementById('wav'+i);
+  display.textContent = val.trim() || 'Sin nombre';
+  av.textContent = val.trim() ? val.trim().split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase() : WORKER_INITIALS[i];
+}
+
+function setPresence(i, status) {
+  const btnP = document.getElementById('pbtn_present'+i);
+  const btnA = document.getElementById('pbtn_absent'+i);
+  const badge = document.getElementById('wbadge'+i);
+  const workSec = document.getElementById('work_section'+i);
+  const absentSec = document.getElementById('absent_reason'+i);
+  const presentSec = document.getElementById('present_section'+i);
+
+  btnP.className = 'pres-btn' + (status==='present' ? ' active-present' : '');
+  btnA.className = 'pres-btn' + (status==='absent'  ? ' active-absent'  : '');
+
+  workSec.style.display = 'block';
+  if (status === 'present') {
+    badge.className = 'badge badge-present';
+    badge.textContent = 'Presente';
+    absentSec.style.display = 'none';
+    presentSec.style.display = 'block';
+  } else {
+    badge.className = 'badge badge-absent';
+    badge.textContent = 'Ausente';
+    absentSec.style.display = 'block';
+    presentSec.style.display = 'none';
+  }
+  completedStatus[i] = true;
+  updateProgress();
+}
+
+function toggleWork(cbId, detailId) {
+  const cb = document.getElementById(cbId);
+  const detail = document.getElementById(detailId);
+  if (!detail) return;
+  detail.classList.toggle('show', cb.checked);
+}
+
+function updateProgress() {
+  const done = completedStatus.filter(Boolean).length;
+  document.getElementById('progressBar').style.width = (done/4*100)+'%';
+  document.getElementById('progressLabel').textContent = done+' de 4';
+}
+
+function submitForm() {
+  const sup = document.getElementById('supervisor').value.trim();
+  const rec = document.getElementById('recinto').value;
+  const fec = document.getElementById('fecha').value;
+  if (!sup) { alert('Ingrese el nombre del supervisor.'); return; }
+  if (!rec)  { alert('Seleccione el recinto.'); return; }
+  if (!fec)  { alert('Ingrese la fecha.'); return; }
+  const done = completedStatus.filter(Boolean).length;
+  if (done < 4) {
+    if (!confirm(`Solo ${done} de 4 jornales tienen asistencia registrada. ¿Desea enviar igual?`)) return;
+  }
+  const msg = document.getElementById('successMsg');
+  msg.textContent = `Jornada del ${fec} en ${rec} registrada. Supervisor: ${sup}.`;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function newForm() {
+  document.getElementById('overlay').classList.remove('show');
+  clearForm();
+}
+
+function clearForm() {
+  document.querySelectorAll('input[type=text],input[type=number],input[type=date],textarea').forEach(e=>e.value='');
+  document.querySelectorAll('select').forEach(e=>e.selectedIndex=0);
+  document.querySelectorAll('input[type=checkbox]').forEach(e=>e.checked=false);
+  document.querySelectorAll('.work-detail').forEach(e=>e.classList.remove('show'));
+  document.querySelectorAll('.worker-body').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.chevron').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.work_section').forEach(e=>e.style.display='none');
+  for(let i=0;i<4;i++){
+    completedStatus[i]=false;
+    document.getElementById('wbadge'+i).className='badge badge-empty';
+    document.getElementById('wbadge'+i).textContent='Sin registrar';
+    document.getElementById('wname_display'+i).textContent='Sin nombre';
+    document.getElementById('wav'+i).textContent=WORKER_INITIALS[i];
+    document.getElementById('pbtn_present'+i).className='pres-btn';
+    document.getElementById('pbtn_absent'+i).className='pres-btn';
+    const ws=document.getElementById('work_section'+i);
+    if(ws) ws.style.display='none';
+  }
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fecha').value = today;
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+buildWorkers();
+</script>
+</body>
+</html>
