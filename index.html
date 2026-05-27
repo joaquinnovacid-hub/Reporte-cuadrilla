@@ -1,45 +1,184 @@
-CAD
-CENTRO SUR
-Reporte Diario de Cuadrilla
-El supervisor completa este formulario al cierre de jornada. Incluye asistencia, tareas ejecutadas, tiempo y cantidades de los 4 jornales.
-* Campos obligatorios
-Nombre del supervisor *
-FECHA *
-RECINTO / AERÓDROMO *
-        Seleccione...
-        
-          El Boldo de Cauquenes
-          General Freire de Curicó
-          Municipal de Linares
-          Bernardo O'Higgins de Chillán
-          Las Misiones de Cañete
-          Carriel Sur de Talcahuano
-          Isla Mocha
-          Puerto Sur de Isla Santa María
-          Los Pehuenches de Lebu
-          María Dolores de Los Ángeles
-          Lequecahue de Tirúa
-          Los Confines de Angol
-          Villa Portales de Lonquimay
-          Pucón
-          Traiguén
-          Victoria
-          La Araucanía
-        
-        
-          Panguilemo de Talca
-          Cuna de Prat de Ninhue
-          Los Álamos
-          Base Naval de Talcahuano
-        
-      
-HORA INICIO JORNADA
-HORA TÉRMINO JORNADA
-Jornales completados
+// ============================================================
+//  PASO 1: Ve a https://sheets.google.com y crea una hoja nueva
+//  PASO 2: En el menú: Extensiones → Apps Script
+//  PASO 3: Borra todo el código que hay y pega este script completo
+//  PASO 4: Haz clic en "Guardar" (ícono de disco)
+//  PASO 5: Haz clic en "Implementar" → "Nueva implementación"
+//           - Tipo: Aplicación web
+//           - Ejecutar como: Yo (tu cuenta)
+//           - Quién tiene acceso: Cualquier persona
+//  PASO 6: Clic en "Implementar" → Copia la URL que aparece
+//  PASO 7: Pega esa URL en el archivo index.html donde dice:
+//           const SCRIPT_URL = "PEGA_TU_URL_AQUI";
+// ============================================================
 
-0 de 4
-REGISTRO POR JORNAL
+function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
 
-Observaciones generales de la jornada
-Enviar reporte Limpiar
-Reporte diario cuadrilla · CAD Macrozona Centro Sur 2026
+    // Si la hoja está vacía, crear encabezados
+    if (sheet.getLastRow() === 0) {
+      var headers = [
+        "Timestamp",
+        "Fecha Jornada",
+        "Supervisor",
+        "Recinto",
+        "Hora Inicio",
+        "Hora Término",
+        "Observaciones Generales",
+        // Jornal 1
+        "J1 - Nombre",
+        "J1 - RUT",
+        "J1 - Asistencia",
+        "J1 - Horas Laborales",
+        "J1 - Horas Efectivas",
+        "J1 - Trabajos Realizados",
+        "J1 - Tiempos por Trabajo",
+        "J1 - Cantidades por Trabajo",
+        "J1 - Observaciones Pavimentos",
+        "J1 - Observaciones Caminos",
+        "J1 - Observaciones Drenajes",
+        "J1 - Observaciones Vegetación",
+        "J1 - Observaciones Cercos",
+        "J1 - Observaciones Franja Seguridad",
+        "J1 - Observaciones Edificio",
+        "J1 - Observaciones Pasadas Peatonales",
+        "J1 - Observaciones Ayudas Visuales",
+        "J1 - Observaciones Catavientos",
+        "J1 - Observaciones PPH",
+        "J1 - Motivo Ausencia",
+        "J1 - Obs. Ausencia",
+        // Jornal 2
+        "J2 - Nombre",
+        "J2 - RUT",
+        "J2 - Asistencia",
+        "J2 - Horas Laborales",
+        "J2 - Horas Efectivas",
+        "J2 - Trabajos Realizados",
+        "J2 - Tiempos por Trabajo",
+        "J2 - Cantidades por Trabajo",
+        "J2 - Observaciones Pavimentos",
+        "J2 - Observaciones Caminos",
+        "J2 - Observaciones Drenajes",
+        "J2 - Observaciones Vegetación",
+        "J2 - Observaciones Cercos",
+        "J2 - Observaciones Franja Seguridad",
+        "J2 - Observaciones Edificio",
+        "J2 - Observaciones Pasadas Peatonales",
+        "J2 - Observaciones Ayudas Visuales",
+        "J2 - Observaciones Catavientos",
+        "J2 - Observaciones PPH",
+        "J2 - Motivo Ausencia",
+        "J2 - Obs. Ausencia",
+        // Jornal 3
+        "J3 - Nombre",
+        "J3 - RUT",
+        "J3 - Asistencia",
+        "J3 - Horas Laborales",
+        "J3 - Horas Efectivas",
+        "J3 - Trabajos Realizados",
+        "J3 - Tiempos por Trabajo",
+        "J3 - Cantidades por Trabajo",
+        "J3 - Observaciones Pavimentos",
+        "J3 - Observaciones Caminos",
+        "J3 - Observaciones Drenajes",
+        "J3 - Observaciones Vegetación",
+        "J3 - Observaciones Cercos",
+        "J3 - Observaciones Franja Seguridad",
+        "J3 - Observaciones Edificio",
+        "J3 - Observaciones Pasadas Peatonales",
+        "J3 - Observaciones Ayudas Visuales",
+        "J3 - Observaciones Catavientos",
+        "J3 - Observaciones PPH",
+        "J3 - Motivo Ausencia",
+        "J3 - Obs. Ausencia",
+        // Jornal 4
+        "J4 - Nombre",
+        "J4 - RUT",
+        "J4 - Asistencia",
+        "J4 - Horas Laborales",
+        "J4 - Horas Efectivas",
+        "J4 - Trabajos Realizados",
+        "J4 - Tiempos por Trabajo",
+        "J4 - Cantidades por Trabajo",
+        "J4 - Observaciones Pavimentos",
+        "J4 - Observaciones Caminos",
+        "J4 - Observaciones Drenajes",
+        "J4 - Observaciones Vegetación",
+        "J4 - Observaciones Cercos",
+        "J4 - Observaciones Franja Seguridad",
+        "J4 - Observaciones Edificio",
+        "J4 - Observaciones Pasadas Peatonales",
+        "J4 - Observaciones Ayudas Visuales",
+        "J4 - Observaciones Catavientos",
+        "J4 - Observaciones PPH",
+        "J4 - Motivo Ausencia",
+        "J4 - Obs. Ausencia"
+      ];
+      sheet.appendRow(headers);
+
+      // Formato encabezados
+      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground("#0078d4");
+      headerRange.setFontColor("#ffffff");
+      headerRange.setFontWeight("bold");
+      sheet.setFrozenRows(1);
+    }
+
+    var row = [
+      new Date().toLocaleString("es-CL"),
+      data.fecha,
+      data.supervisor,
+      data.recinto,
+      data.horaInicio,
+      data.horaTermino,
+      data.obsGenerales
+    ];
+
+    // Agregar datos de cada jornal
+    for (var i = 0; i < 4; i++) {
+      var w = data.workers[i] || {};
+      row.push(
+        w.nombre || "",
+        w.rut || "",
+        w.asistencia || "",
+        w.horasLaborales || "",
+        w.horasEfectivas || "",
+        (w.trabajos || []).join(" | "),
+        (w.tiempos || []).join(" | "),
+        (w.cantidades || []).join(" | "),
+        w.obsPavimentos || "",
+        w.obsCaminos || "",
+        w.obsDrenajes || "",
+        w.obsVegetacion || "",
+        w.obsCercos || "",
+        w.obsFramja || "",
+        w.obsEdificio || "",
+        w.obsPeatonales || "",
+        w.obsAyudas || "",
+        w.obsCatavientos || "",
+        w.obsPPH || "",
+        w.motivoAusencia || "",
+        w.obsAusencia || ""
+      );
+    }
+
+    sheet.appendRow(row);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: "ok" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: "error", error: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput("Servidor activo ✓")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
